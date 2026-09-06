@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Simulator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0b1020;
+    color: #fff;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 230px;
+    background: #111827;
+    border-right: 1px solid #263047;
+    padding: 22px 15px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    padding-left: 10px;
+}
+
+.logo span {
+    color: #22c55e;
+}
+
+.balance-box {
+    background: #182235;
+    border: 1px solid #2a3853;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+}
+
+.balance-title {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.balance {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.nav button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    text-align: left;
+    padding: 13px 12px;
+    border-radius: 9px;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.nav button:hover,
+.nav button.active {
+    background: #1f2937;
+    color: #fff;
+}
+
+.reset-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 15px;
+    right: 15px;
+    padding: 11px;
+    border: 1px solid #374151;
+    background: #151d2d;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.reset-btn:hover {
+    background: #263044;
+}
+
+/* MAIN */
+.main {
+    margin-left: 230px;
+    width: calc(100% - 230px);
+    padding: 28px;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.header {
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.header p {
+    margin: 0;
+    color: #94a3b8;
+}
+
+/* DASHBOARD */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    background: #111827;
+    border: 1px solid #263047;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.stat small {
+    color: #94a3b8;
+}
+
+.stat strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 24px;
+}
+
+/* MARKETS */
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.market-card {
+    background: #111827;
+    border: 1px solid #263047;
+    border-radius: 12px;
+    padding: 18px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.market-card:hover {
+    border-color: #4b5f82;
+    transform: translateY(-2px);
+}
+
+.market-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.market-name {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.market-symbol {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.market-price {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 18px;
+}
+
+.green {
+    color: #22c55e;
+}
+
+.red {
+    color: #ef4444;
+}
+
+/* TRADING */
+.back-btn {
+    border: 0;
+    background: #1f2937;
+    color: #fff;
+    border-radius: 8px;
+    padding: 9px 13px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.trade-layout {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 18px;
+}
+
+.chart-box,
+.trade-panel,
+.position-box {
+    background: #111827;
+    border: 1px solid #263047;
+    border-radius: 12px;
+}
+
+.chart-box {
+    padding: 18px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.current-price {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.chart {
+    position: relative;
+    height: 500px;
+    background: #0b1220;
+    border: 1px solid #263047;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(148, 163, 184, 0.10);
+}
+
+.grid-label {
+    position: absolute;
+    right: 6px;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 10px;
+    background: #0b1220;
+    padding-left: 4px;
+}
+
+.candles {
+    position: absolute;
+    left: 8px;
+    right: 55px;
+    top: 0;
+    bottom: 0;
+}
+
+.candle {
+    position: absolute;
+    width: 9px;
+}
+
+.wick {
+    position: absolute;
+    left: 4px;
+    width: 1px;
+}
+
+.body {
+    position: absolute;
+    left: 0;
+    width: 9px;
+    min-height: 2px;
+    border-radius: 1px;
+}
+
+.candle.up .wick,
+.candle.up .body {
+    background: #22c55e;
+}
+
+.candle.down .wick,
+.candle.down .body {
+    background: #ef4444;
+}
+
+.price-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    border-top: 1px dashed;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.price-line span {
+    position: absolute;
+    right: 3px;
+    top: -9px;
+    font-size: 10px;
+    padding: 3px 5px;
+    border-radius: 3px;
+}
+
+.entry-line {
+    border-color: #facc15;
+}
+
+.entry-line span {
+    background: #facc15;
+    color: #111827;
+}
+
+.liquidation-line {
+    border-color: #ef4444;
+}
+
+.liquidation-line span {
+    background: #ef4444;
+    color: white;
+}
+
+/* TRADE PANEL */
+.trade-panel {
+    padding: 20px;
+}
+
+.trade-panel h2 {
+    margin-top: 0;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    color: #94a3b8;
+    margin-bottom: 7px;
+    font-size: 13px;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    padding: 11px;
+    background: #0b1220;
+    color: #fff;
+    border: 1px solid #334155;
+    border-radius: 7px;
+    outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+    border-color: #64748b;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.long-btn,
+.short-btn {
+    border: 0;
+    padding: 13px;
+    color: white;
+    font-weight: bold;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.long-btn {
+    background: #16a34a;
+}
+
+.long-btn:hover {
+    background: #15803d;
+}
+
+.short-btn {
+    background: #dc2626;
+}
+
+.short-btn:hover {
+    background: #b91c1c;
+}
+
+.info {
+    margin-top: 20px;
+    border-top: 1px solid #263047;
+    padding-top: 15px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 9px;
+    color: #94a3b8;
+}
+
+.info-row strong {
+    color: #fff;
+}
+
+/* POSITIONS */
+.position-list {
+    display: grid;
+    gap: 12px;
+}
+
+.position-card {
+    background: #111827;
+    border: 1px solid #263047;
+    border-radius: 12px;
+    padding: 17px;
+}
+
+.position-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.position-type {
+    font-weight: bold;
+}
+
+.close-position {
+    border: 1px solid #374151;
+    background: #1f2937;
+    color: white;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.close-position:hover {
+    background: #374151;
+}
+
+.position-details {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.detail {
+    background: #0b1220;
+    border-radius: 7px;
+    padding: 10px;
+}
+
+.detail small {
+    display: block;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.empty {
+    background: #111827;
+    border: 1px dashed #334155;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    color: #64748b;
+}
+
+/* HISTORY */
+.history-list {
+    display: grid;
+    gap: 12px;
+}
+
+.history-card {
+    background: #111827;
+    border: 1px solid #263047;
+    border-radius: 12px;
+    padding: 17px;
+}
+
+.history-top {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 190px;
+        width: calc(100% - 190px);
+    }
+
+    .trade-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .market-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid #263047;
+    }
+
+    .app {
+        display: block;
+    }
+
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+    }
+
+    .reset-btn {
+        position: static;
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .position-details {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            Trade<span>Sim</span>
+        </div>
+
+        <div class="balance-box">
+            <div class="balance-title">Virtuelles Guthaben</div>
+            <div class="balance" id="sidebarBalance">100,00 €</div>
+        </div>
+
+        <nav class="nav">
+            <button class="active" onclick="showPage('dashboard', this)">
+                🏠 Dashboard
+            </button>
+
+            <button onclick="showPage('markets', this)">
+                📊 Märkte
+            </button>
+
+            <button onclick="showPage('positions', this)">
+                📈 Positionen
+            </button>
+
+            <button onclick="showPage('history', this)">
+                📜 Historie
+            </button>
+        </nav>
+
+        <button class="reset-btn" onclick="resetSimulation()">
+            🔄 Simulation zurücksetzen
+        </button>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="page active">
+
+            <div class="header">
+                <h1>Trading Dashboard</h1>
+                <p>Simuliere Trades mit virtuellem Geld.</p>
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <small>Kontostand</small>
+                    <strong id="dashboardBalance">100,00 €</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Aktive Positionen</small>
+                    <strong id="activeCount">0</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Abgeschlossene Trades</small>
+                    <strong id="historyCount">0</strong>
+                </div>
+
+            </div>
+
+            <div class="header">
+                <h2>Märkte</h2>
+                <p>Klicke auf einen Markt, um zu handeln.</p>
+            </div>
+
+            <div class="market-grid" id="dashboardMarkets"></div>
+
+        </section>
+
+
+        <!-- MARKETS -->
+        <section id="markets" class="page">
+
+            <div class="header">
+                <h1>Märkte</h1>
+                <p>Wähle einen Markt aus.</p>
+            </div>
+
+            <div class="market-grid" id="marketList"></div>
+
+        </section>
+
+
+        <!-- TRADING -->
+        <section id="trading" class="page">
+
+            <button class="back-btn" onclick="showPage('markets')">
+                ← Zurück zu Märkten
+            </button>
+
+            <div class="trade-layout">
+
+                <div class="chart-box">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <div class="chart-title" id="tradeMarketName">
+                                Bitcoin
+                            </div>
+                            <div class="market-symbol" id="tradeMarketSymbol">
+                                BTC
+                            </div>
+                        </div>
+
+                        <div class="current-price" id="tradePrice">
+                            0,00 €
+                        </div>
+
+                    </div>
+
+                    <div class="chart" id="chart">
+
+                        <div class="candles" id="candles"></div>
+
+                        <div id="entryLine" class="price-line entry-line" style="display:none;">
+                            <span>ENTRY</span>
+                        </div>
+
+                        <div id="liquidationLine" class="price-line liquidation-line" style="display:none;">
+                            <span>LIQ</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="trade-panel">
+
+                    <h2>Trade eröffnen</h2>
+
+                    <div class="field">
+                        <label>Einsatz (€)</label>
+                        <input
+                            type="number"
+                            id="investment"
+                            min="1"
+                            step="0.01"
+                            value="10"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>Hebel</label>
+
+                        <select id="leverage">
+                            <option value="1">1x</option>
+                            <option value="2">2x</option>
+                            <option value="5">5x</option>
+                            <option value="10">10x</option>
+                            <option value="20">20x</option>
+                        </select>
+                    </div>
+
+                    <div class="buttons">
+
+                        <button class="long-btn" onclick="openPosition('LONG')">
+                            📈 LONG
+                        </button>
+
+                        <button class="short-btn" onclick="openPosition('SHORT')">
+                            📉 SHORT
+                        </button>
+
+                    </div>
+
+                    <div class="info">
+
+                        <div class="info-row">
+                            <span>Preis</span>
+                            <strong id="infoPrice">-</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Einsatz</span>
+                            <strong id="infoInvestment">-</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Hebel</span>
+                            <strong id="infoLeverage">-</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <span>Positionsgröße</span>
+                            <strong id="infoSize">-</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- POSITIONS -->
+        <section id="positions" class="page">
+
+            <div class="header">
+                <h1>Positionen</h1>
+                <p>Hier siehst du deine offenen Trades.</p>
+            </div>
+
+            <div class="position-list" id="positionsList"></div>
+
+        </section>
+
+
+        <!-- HISTORY -->
+        <section id="history" class="page">
+
+            <div class="header">
+                <h1>Historie</h1>
+                <p>Alle abgeschlossenen Trades.</p>
+            </div>
+
+            <div class="history-list" id="historyList"></div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+
+/* =========================
+   MARKETS
+========================= */
+
+const markets = [
+    {
+        id: "btc",
+        name: "Bitcoin",
+        symbol: "BTC",
+        price: 60000
+    },
+    {
+        id: "eth",
+        name: "Ethereum",
+        symbol: "ETH",
+        price: 3000
+    },
+    {
+        id: "apple",
+        name: "Apple",
+        symbol: "AAPL",
+        price: 220
+    },
+    {
+        id: "tesla",
+        name: "Tesla",
+        symbol: "TSLA",
+        price: 250
+    },
+    {
+        id: "nvidia",
+        name: "NVIDIA",
+        symbol: "NVDA",
+        price: 140
+    },
+    {
+        id: "gold",
+        name: "Gold",
+        symbol: "XAU",
+        price: 2500
+    },
+    {
+        id: "sp500",
+        name: "S&P 500",
+        symbol: "SPX",
+        price: 5600
+    },
+    {
+        id: "dax",
+        name: "DAX",
+        symbol: "DAX",
+        price: 18500
+    },
+    {
+        id: "eurusd",
+        name: "EUR/USD",
+        symbol: "EURUSD",
+        price: 1.09
+    },
+    {
+        id: "amazon",
+        name: "Amazon",
+        symbol: "AMZN",
+        price: 190
+    }
+];
+
+
+/* =========================
+   STATE
+========================= */
+
+let balance = 100;
+
+let positions = [];
+
+let history = [];
+
+let selectedMarket = null;
+
+let candles = {};
+
+let previousPrices = {};
+
+
+/* =========================
+   INITIALIZE CANDLES
+========================= */
+
+function initializeCandles() {
+
+    markets.forEach(market => {
+
+        candles[market.id] = [];
+
+        let price = market.price;
+
+        for (let i = 0; i < 45; i++) {
+
+            const open = price;
+
+            const movement =
+                price * ((Math.random() - 0.5) * 0.018);
+
+            const close = Math.max(
+                0.0001,
+                open + movement
+            );
+
+            const high =
+                Math.max(open, close) +
+                price * Math.random() * 0.006;
+
+            const low =
+                Math.min(open, close) -
+                price * Math.random() * 0.006;
+
+            candles[market.id].push({
+                open,
+                high,
+                low,
+                close
+            });
+
+            price = close;
+        }
+
+        market.price = price;
+        previousPrices[market.id] = price;
+    });
+}
+
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
+
+function showPage(pageId, button) {
+
+    document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
+    });
+
+    const page = document.getElementById(pageId);
+
+    if (page) {
+        page.classList.add("active");
+    }
+
+    document.querySelectorAll(".nav button").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    if (button) {
+        button.classList.add("active");
+    }
+
+    if (pageId === "dashboard") {
+        renderDashboardMarkets();
+    }
+
+    if (pageId === "markets") {
+        renderMarkets();
+    }
+
+    if (pageId === "positions") {
+        renderPositions();
+    }
+
+    if (pageId === "history") {
+        renderHistory();
+    }
+}
+
+
+/* =========================
+   MARKET CARDS
+========================= */
+
+function marketChange(market) {
+
+    const oldPrice = previousPrices[market.id];
+
+    if (!oldPrice) return 0;
+
+    return ((market.price - oldPrice) / oldPrice) * 100;
+}
+
+
+function createMarketCard(market) {
+
+    const change = marketChange(market);
+
+    const changeClass = change >= 0 ? "green" : "red";
+
+    return `
+        <div class="market-card"
+             onclick="openTrading('${market.id}')">
+
+            <div class="market-top">
+
+                <div>
+                    <div class="market-name">
+                        ${market.name}
+                    </div>
+
+                    <div class="market-symbol">
+                        ${market.symbol}
+                    </div>
+                </div>
+
+                <div class="${changeClass}">
+                    ${change >= 0 ? "+" : ""}
+                    ${change.toFixed(2)}%
+                </div>
+
+            </div>
+
+            <div class="market-price">
+                ${formatPrice(market.price)}
+            </div>
+
+        </div>
+    `;
+}
+
+
+function renderMarkets() {
+
+    const container =
+        document.getElementById("marketList");
+
+    container.innerHTML =
+        markets.map(createMarketCard).join("");
+}
+
+
+function renderDashboardMarkets() {
+
+    const container =
+        document.getElementById("dashboardMarkets");
+
+    container.innerHTML =
+        markets.map(createMarketCard).join("");
+}
+
+
+/* =========================
+   OPEN TRADING
+========================= */
+
+function openTrading(marketId) {
+
+    selectedMarket =
+        markets.find(m => m.id === marketId);
+
+    if (!selectedMarket) return;
+
+    document.getElementById("tradeMarketName")
+        .textContent = selectedMarket.name;
+
+    document.getElementById("tradeMarketSymbol")
+        .textContent = selectedMarket.symbol;
+
+    document.getElementById("investment").value = 10;
+
+    updateTradingUI();
+
+    showPage("trading");
+
+    drawChart();
+}
+
+
+/* =========================
+   TRADING UI
+========================= */
+
+function updateTradingUI() {
+
+    if (!selectedMarket) return;
+
+    const price = selectedMarket.price;
+
+    document.getElementById("tradePrice")
+        .textContent = formatPrice(price);
+
+    document.getElementById("infoPrice")
+        .textContent = formatPrice(price);
+
+    const investment =
+        Number(document.getElementById("investment").value) || 0;
+
+    const leverage =
+        Number(document.getElementById("leverage").value) || 1;
+
+    const size = investment * leverage;
+
+    document.getElementById("infoInvestment")
+        .textContent = formatEuro(investment);
+
+    document.getElementById("infoLeverage")
+        .textContent = leverage + "x";
+
+    document.getElementById("infoSize")
+        .textContent = formatEuro(size);
+}
+
+
+/* =========================
+   OPEN POSITION
+========================= */
+
+function openPosition(type) {
+
+    if (!selectedMarket) return;
+
+    const investment =
+        Number(document.getElementById("investment").value);
+
+    const leverage =
+        Number(document.getElementById("leverage").value);
+
+    if (!Number.isFinite(investment) || investment <= 0) {
+
+        alert("Bitte einen gültigen Einsatz eingeben.");
+
+        return;
+    }
+
+    if (investment > balance) {
+
+        alert("Du hast nicht genug Guthaben.");
+
+        return;
+    }
+
+    const entryPrice =
+        selectedMarket.price;
+
+    const position = {
+
+        id: Date.now(),
+
+        marketId: selectedMarket.id,
+
+        marketName: selectedMarket.name,
+
+        symbol: selectedMarket.symbol,
+
+        type,
+
+        investment,
+
+        leverage,
+
+        size: investment * leverage,
+
+        entryPrice,
+
+        openedAt: new Date()
+
+    };
+
+    balance -= investment;
+
+    positions.push(position);
+
+    updateBalance();
+
+    renderPositions();
+
+    updateEntryLines();
+
+    alert(
+        `${type} eröffnet bei ${formatPrice(entryPrice)}`
+    );
+}
+
+
+/* =========================
+   PNL
+========================= */
+
+function calculatePnL(position) {
+
+    const market =
+        markets.find(m => m.id === position.marketId);
+
+    if (!market) return 0;
+
+    const currentPrice = market.price;
+
+    const difference =
+        currentPrice - position.entryPrice;
+
+    const percent =
+        difference / position.entryPrice;
+
+    let pnl;
+
+    if (position.type === "LONG") {
+
+        pnl =
+            position.size * percent;
+
+    } else {
+
+        pnl =
+            position.size * -percent;
+
+    }
+
+    return pnl;
+}
+
+
+/* =========================
+   LIQUIDATION
+========================= */
+
+function getLiquidationPrice(position) {
+
+    if (position.type === "LONG") {
+
+        return position.entryPrice *
+            (1 - 0.9 / position.leverage);
+
+    } else {
+
+        return position.entryPrice *
+            (1 + 0.9 / position.leverage);
+
+    }
+}
+
+
+/* =========================
+   CLOSE POSITION
+========================= */
+
+function closePosition(id) {
+
+    const index =
+        positions.findIndex(p => p.id === id);
+
+    if (index === -1) return;
+
+    const position =
+        positions[index];
+
+    const pnl =
+        calculatePnL(position);
+
+    /*
+       Einsatz + Gewinn/Verlust
+       wird wieder dem Guthaben hinzugefügt.
+    */
+
+    balance +=
+        Math.max(0, position.investment + pnl);
+
+    history.unshift({
+
+        ...position,
+
+        exitPrice:
+            markets.find(m => m.id === position.marketId).price,
+
+        pnl,
+
+        closedAt: new Date()
+
+    });
+
+    positions.splice(index, 1);
+
+    updateBalance();
+
+    renderPositions();
+
+    renderHistory();
+
+    updateEntryLines();
+
+}
+
+
+/* =========================
+   POSITIONS RENDER
+========================= */
+
+function renderPositions() {
+
+    const container =
+        document.getElementById("positionsList");
+
+    if (positions.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty">
+                Keine offenen Positionen.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        positions.map(position => {
+
+            const pnl =
+                calculatePnL(position);
+
+            const pnlClass =
+                pnl >= 0 ? "green" : "red";
+
+            const liquidation =
+                getLiquidationPrice(position);
+
+            return `
+                <div class="position-card">
+
+                    <div class="position-top">
+
+                        <div>
+                            <div class="position-type ${position.type === "LONG" ? "green" : "red"}">
+                                ${position.type}
+                            </div>
+
+                            <strong>
+                                ${position.marketName}
+                                (${position.symbol})
+                            </strong>
+                        </div>
+
+                        <button
+                            class="close-position"
+                            onclick="closePosition(${position.id})">
+
+                            Position schließen
+
+                        </button>
+
+                    </div>
+
+                    <div class="position-details">
+
+                        <div class="detail">
+                            <small>Einstieg</small>
+                            ${formatPrice(position.entryPrice)}
+                        </div>
+
+                        <div class="detail">
+                            <small>Aktuell</small>
+                            ${formatPrice(
+                                markets.find(m =>
+                                    m.id === position.marketId
+                                ).price
+                            )}
+                        </div>
+
+                        <div class="detail">
+                            <small>Hebel</small>
+                            ${position.leverage}x
+                        </div>
+
+                        <div class="detail">
+                            <small>P&L</small>
+                            <span class="${pnlClass}">
+                                ${pnl >= 0 ? "+" : ""}
+                                ${formatEuro(pnl)}
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div style="margin-top:12px;color:#94a3b8;font-size:13px;">
+                        Liquidation:
+                        <span class="red">
+                            ${formatPrice(liquidation)}
+                        </span>
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+    updateBalance();
+}
+
+
+/* =========================
+   HISTORY
+========================= */
+
+function renderHistory() {
+
+    const container =
+        document.getElementById("historyList");
+
+    if (history.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty">
+                Noch keine abgeschlossenen Trades.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        history.map(trade => {
+
+            const pnlClass =
+                trade.pnl >= 0 ? "green" : "red";
+
+            return `
+                <div class="history-card">
+
+                    <div class="history-top">
+
+                        <div>
+
+                            <strong>
+                                ${trade.marketName}
+                            </strong>
+
+                            <div style="color:#64748b;margin-top:4px;">
+                                ${trade.type}
+                                · ${trade.leverage}x
+                            </div>
+
+                        </div>
+
+                        <strong class="${pnlClass}">
+                            ${trade.pnl >= 0 ? "+" : ""}
+                            ${formatEuro(trade.pnl)}
+                        </strong>
+
+                    </div>
+
+                    <div style="
+                        margin-top:12px;
+                        color:#94a3b8;
+                        font-size:13px;
+                    ">
+
+                        Einstieg:
+                        ${formatPrice(trade.entryPrice)}
+                        &nbsp; → &nbsp;
+                        Ausstieg:
+                        ${formatPrice(trade.exitPrice)}
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+/* =========================
+   BALANCE
+========================= */
+
+function updateBalance() {
+
+    document.getElementById("sidebarBalance")
+        .textContent = formatEuro(balance);
+
+    document.getElementById("dashboardBalance")
+        .textContent = formatEuro(balance);
+
+    document.getElementById("activeCount")
+        .textContent = positions.length;
+
+    document.getElementById("historyCount")
+        .textContent = history.length;
+}
+
+
+/* =========================
+   CHART
+========================= */
+
+function drawChart() {
+
+    if (!selectedMarket) return;
+
+    const chart =
+        document.getElementById("chart");
+
+    const candleContainer =
+        document.getElementById("candles");
+
+    /*
+       Alte Candles entfernen,
+       Grid neu erstellen.
+    */
+
+    chart.querySelectorAll(".grid-line, .grid-label")
+        .forEach(el => el.remove());
+
+    candleContainer.innerHTML = "";
+
+    const data =
+        candles[selectedMarket.id];
+
+    if (!data || data.length === 0) return;
+
+    const visible =
+        data.slice(-45);
+
+    let min =
+        Math.min(...visible.map(c => c.low));
+
+    let max =
+        Math.max(...visible.map(c => c.high));
+
+    const padding =
+        (max - min) * 0.10;
+
+    min -= padding;
+    max += padding;
+
+    /*
+       horizontale Grid-Linien
+    */
+
+    for (let i = 0; i <= 5; i++) {
+
+        const percent =
+            (i / 5) * 100;
+
+        const line =
+            document.createElement("div");
+
+        line.className = "grid-line";
+
+        line.style.top =
+            percent + "%";
+
+        chart.appendChild(line);
+
+        const label =
+            document.createElement("div");
+
+        label.className = "grid-label";
+
+        label.style.top =
+            percent + "%";
+
+        const price =
+            max -
+            (max - min) * (i / 5);
+
+        label.textContent =
+            formatPrice(price);
+
+        chart.appendChild(label);
+    }
+
+
+    /*
+       Candlesticks
+    */
+
+    visible.forEach((candle, index) => {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "candle " +
+            (candle.close >= candle.open
+                ? "up"
+                : "down");
+
+        const x =
+            index *
+            (100 / visible.length);
+
+        wrapper.style.left =
+            `calc(${x}% + 3px)`;
+
+        const highPercent =
+            ((max - candle.high) /
+                (max - min)) * 100;
+
+        const lowPercent =
+            ((max - candle.low) /
+                (max - min)) * 100;
+
+        const openPercent =
+            ((max - candle.open) /
+                (max - min)) * 100;
+
+        const closePercent =
+            ((max - candle.close) /
+                (max - min)) * 100;
+
+        const wick =
+            document.createElement("div");
+
+        wick.className = "wick";
+
+        wick.style.top =
+            highPercent + "%";
+
+        wick.style.height =
+            (lowPercent - highPercent) + "%";
+
+        const body =
+            document.createElement("div");
+
+        body.className = "body";
+
+        body.style.top =
+            Math.min(
+                openPercent,
+                closePercent
+            ) + "%";
+
+        body.style.height =
+            Math.max(
+                2,
+                Math.abs(
+                    closePercent -
+                    openPercent
+                )
+            ) + "%";
+
+        wrapper.appendChild(wick);
+
+        wrapper.appendChild(body);
+
+        candleContainer.appendChild(wrapper);
+
+    });
+
+    updateEntryLines();
+}
+
+
+/* =========================
+   ENTRY + LIQUIDATION LINES
+========================= */
+
+function priceToPercent(price) {
+
+    if (!selectedMarket) return 50;
+
+    const data =
+        candles[selectedMarket.id];
+
+    if (!data || data.length === 0) return 50;
+
+    const visible =
+        data.slice(-45);
+
+    let min =
+        Math.min(...visible.map(c => c.low));
+
+    let max =
+        Math.max(...visible.map(c => c.high));
+
+    const padding =
+        (max - min) * 0.10;
+
+    min -= padding;
+    max += padding;
+
+    return (
+        (max - price) /
+        (max - min)
+    ) * 100;
+}
+
+
+function updateEntryLines() {
+
+    const entryLine =
+        document.getElementById("entryLine");
+
+    const liquidationLine =
+        document.getElementById("liquidationLine");
+
+    /*
+       Wenn keine Position für den
+       ausgewählten Markt vorhanden ist,
+       werden die Linien versteckt.
+    */
+
+    const position =
+        positions.find(
+            p => p.marketId === selectedMarket?.id
+        );
+
+    if (!position) {
+
+        entryLine.style.display = "none";
+
+        liquidationLine.style.display = "none";
+
+        return;
+    }
+
+    const entryPercent =
+        priceToPercent(position.entryPrice);
+
+    const liquidation =
+        getLiquidationPrice(position);
+
+    const liquidationPercent =
+        priceToPercent(liquidation);
+
+    entryLine.style.display = "block";
+
+    entryLine.style.top =
+        entryPercent + "%";
+
+    liquidationLine.style.display = "block";
+
+    liquidationLine.style.top =
+        liquidationPercent + "%";
+}
+
+
+/* =========================
+   MARKET MOVEMENT
+========================= */
+
+function updateMarkets() {
+
+    markets.forEach(market => {
+
+        const oldPrice =
+            market.price;
+
+        /*
+           Kleine zufällige Bewegung.
+        */
+
+        const volatility =
+            market.id === "eurusd"
+                ? 0.002
+                : 0.008;
+
+        const movement =
+            oldPrice *
+            ((Math.random() - 0.5) *
+                volatility);
+
+        const newPrice =
+            Math.max(
+                0.0001,
+                oldPrice + movement
+            );
+
+        market.price =
+            newPrice;
+
+        previousPrices[market.id] =
+            oldPrice;
+
+
+        /*
+           Neue Candle
+        */
+
+        const data =
+            candles[market.id];
+
+        const last =
+            data[data.length - 1];
+
+        const candle =
+            {
+                open: last.close,
+                high: Math.max(
+                    last.close,
+                    newPrice
+                ) + newPrice * 0.001,
+                low: Math.min(
+                    last.close,
+                    newPrice
+                ) - newPrice * 0.001,
+                close: newPrice
+            };
+
+        data.push(candle);
+
+        if (data.length > 60) {
+            data.shift();
+        }
+
+    });
+
+
+    /*
+       Liquidation prüfen
+    */
+
+    checkLiquidations();
+
+    updateBalance();
+
+    renderDashboardMarkets();
+
+    renderMarkets();
+
+    renderPositions();
+
+    if (selectedMarket) {
+
+        updateTradingUI();
+
+        drawChart();
+
+    }
+}
+
+
+/* =========================
+   LIQUIDATIONS
+========================= */
+
+function checkLiquidations() {
+
+    const toLiquidate = [];
+
+    positions.forEach(position => {
+
+        const market =
+            markets.find(
+                m => m.id === position.marketId
+            );
+
+        if (!market) return;
+
+        const liquidation =
+            getLiquidationPrice(position);
+
+        let liquidated = false;
+
+        if (
+            position.type === "LONG" &&
+            market.price <= liquidation
+        ) {
+            liquidated = true;
+        }
+
+        if (
+            position.type === "SHORT" &&
+            market.price >= liquidation
+        ) {
+            liquidated = true;
+        }
+
+        if (liquidated) {
+            toLiquidate.push(position.id);
+        }
+
+    });
+
+
+    toLiquidate.forEach(id => {
+
+        const index =
+            positions.findIndex(
+                p => p.id === id
+            );
+
+        if (index === -1) return;
+
+        const position =
+            positions[index];
+
+        history.unshift({
+
+            ...position,
+
+            exitPrice:
+                markets.find(
+                    m => m.id === position.marketId
+                ).price,
+
+            pnl: -position.investment,
+
+            liquidated: true,
+
+            closedAt: new Date()
+
+        });
+
+        /*
+           Bei Liquidation geht der Einsatz verloren.
+           Deshalb wird nichts zurückgebucht.
+        */
+
+        positions.splice(index, 1);
+
+    });
+
+}
+
+
+/* =========================
+   FORMAT
+========================= */
+
+function formatEuro(value) {
+
+    return Number(value).toLocaleString(
+        "de-DE",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    ) + " €";
+}
+
+
+function formatPrice(value) {
+
+    if (value < 2) {
+
+        return Number(value).toLocaleString(
+            "de-DE",
+            {
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
+            }
+        ) + " €";
+
+    }
+
+    if (value < 100) {
+
+        return Number(value).toLocaleString(
+            "de-DE",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        ) + " €";
+
+    }
+
+    return Number(value).toLocaleString(
+        "de-DE",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    ) + " €";
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetSimulation() {
+
+    const confirmed =
+        confirm(
+            "Möchtest du die komplette Simulation zurücksetzen?"
+        );
+
+    if (!confirmed) return;
+
+    balance = 100;
+
+    positions = [];
+
+    history = [];
+
+    selectedMarket = null;
+
+    markets[0].price = 60000;
+    markets[1].price = 3000;
+    markets[2].price = 220;
+    markets[3].price = 250;
+    markets[4].price = 140;
+    markets[5].price = 2500;
+    markets[6].price = 5600;
+    markets[7].price = 18500;
+    markets[8].price = 1.09;
+    markets[9].price = 190;
+
+    initializeCandles();
+
+    updateBalance();
+
+    renderMarkets();
+
+    renderDashboardMarkets();
+
+    renderPositions();
+
+    renderHistory();
+
+    showPage("dashboard");
+
+}
+
+
+/* =========================
+   INPUT EVENTS
+========================= */
+
+document
+    .getElementById("investment")
+    .addEventListener(
+        "input",
+        updateTradingUI
+    );
+
+document
+    .getElementById("leverage")
+    .addEventListener(
+        "change",
+        updateTradingUI
+    );
+
+
+/* =========================
+   START
+========================= */
+
+initializeCandles();
+
+updateBalance();
+
+renderMarkets();
+
+renderDashboardMarkets();
+
+renderPositions();
+
+renderHistory();
+
+
+/*
+   Kursbewegung:
+   alle 3 Sekunden
+*/
+
+setInterval(
+    updateMarkets,
+    3000
+);
+
+
+/*
+   Chart neu zeichnen:
+   alle 1,5 Sekunden
+*/
+
+setInterval(
+    () => {
+
+        if (selectedMarket) {
+
+            drawChart();
+
+            updateTradingUI();
+
+        }
+
+    },
+    1500
+);
+
+</script>
+
+</body>
+</html>
